@@ -2,12 +2,14 @@
 
 == Goals
 
-Cloud Foundry上に、アプリケーションのデプロイと構成を行います。
+Cloud Foundry上に、アプリケーションのデプロイと構成を行います.
 Cloud Foundryが提供する監視、管理といったプラットフォームとしての機能を確認するとともに、ゼロダウンタイムでのblue-greenデプロイメントを確認します
 
 == Prerequisites(事前準備)
 
 下記ツールとアカウントが必要となりますので、事前にインストールをして下さい。
+
+
 . Git from link:https://mac.github.com/[github.com]
 . Cloud Foundry CLI from link:https://github.com/cloudfoundry/cli/releases[`CF CLI Releases`]
 . Curl from link:http://curl.haxx.se/[curl]
@@ -32,17 +34,16 @@ Cloud Foundryにログインします。
 
 . ドキュメントの確認 http://docs.pivotal.io/pivotalcf/devguide/deploy-apps/deploy-app.html
 . Pivotal Web Services(PWS), もしくはPivotal Cloud Foundry(PCF)へのログイン
-
++
 [source,bash]
 ----
 // PWSを利用している場合は、system domainはrun.pivotal.ioとなりますので、targetはhttps://api.run.pivotal.ioとなります
 // PCFを利用している場合は、ご利用されている環境の管理者の方にお訪ね下さい
 // メールアドレスとパスワード、Org(必要に応じて), spaceを選択して下さい
-
 $ cf login -a https://api.run.pivotal.io
 ----
 +
-. もしくは、envというファイルを作成して、sourceコマンドで読み込ませる事も可能です
+. もしくは、envというファイルを作成して、sourceコマンドで読み込ませる事も可能です.
 +
 [source,bash]
 ----
@@ -126,10 +127,10 @@ todo-php-mongoアプリケーションはtodoデータを格納し参照する�
 * link:http://docs.pivotal.io/pivotalcf/devguide/services/managing-services.html[Managing Services]
 +
 * PWSの場合
-. mongoLab(mongodb)のサービスインスタンスを作成します。`todo-mongo-db-<first-initial><last-initial>`という形で
-名前を指定して下さい
-<first-initial><last-initial>の部分は、アプリケーション名として選んだ方法と同じにして下さい
-`cli`もしくはApp Manager http://console.run.pivotal.io からサービスを作成することが出来ます.
+. mongoLab(mongodb)のサービスインスタンスを作成します。+
+`todo-mongo-db-<first-initial><last-initial>`という形で名前を指定して下さい +
+<first-initial><last-initial>の部分は、アプリケーション名として選んだ方法と同じにして下さい +
+`cli`もしくはApp Manager http://console.run.pivotal.io からサービスを作成することが出来ます. +
 `cf marketplace`もしくはMarketplaceを選択して、利用可能なサービスを選びます.
 
 下記はcliを利用した作成方法です。
@@ -198,10 +199,8 @@ $ cf env <first-initial><last-initial>-todo
 $ nano manifest.service
 ----
 +
-. アプリケーション名、メモリサイズ、インスタンス数、アプリケーションファイルへのパスを指定します
-
-*アプリケーション名が '<first-initial><last-initial>-todo' という形になっている事を確認して下さい、
-これをhost名として利用します *
+. アプリケーション名、メモリサイズ、インスタンス数、アプリケーションファイルへのパスを指定します +
+*アプリケーション名が '<first-initial><last-initial>-todo' という形になっている事を確認して下さい、これをhost名として利用します* +
 . servicesを追加して、これを`todo-mongo-db-<first-initial><last-initial>` として指定して下さい.
 . 以上が設定出来たら、一度既存の割り当てを解除して、再度マニフェストを利用してpushします.
 
@@ -254,6 +253,7 @@ $ curl -i http://<first-initial><last-initial>-todo.cfapps.io/
 ----
 
 それ以外のログの利用方法はこちらをご参照下さい: link:http://docs.pivotal.io/pivotalcf/devguide/deploy-apps/streaming-logs.html#view[Streaming Logs]
++
 最新のイベントを見るには、App Managerもしくはcliで確認することが可能です
 (アプリケーションのクラッシュ、エラーコードなど)
 
@@ -364,11 +364,11 @@ No staging env variables have been set
 
 参考ドキュメント link:http://docs.cloudfoundry.org/devguide/deploy-apps/cf-scale.html
 
-スケールアップさせる場合には、メモリの割り当てを増やす事が可能です
+スケールアップさせる場合には、メモリの割り当てを増やす事が可能です +
 ある程度パフォーマンスチューニングをする事も効果がある場合がありますので、すぐに本番適用せずに、最適な設定を
-施すことをおすすめいたします
+施すことをおすすめいたします +
 スケールアップについては、アプリケーションインスタンスを追加することで、アプリケーションスループットと
-パフォーマンスを向上させることが可能です
+パフォーマンスを向上させることが可能です +
 
 まずはメモリのサイズを1GBにまで増やして、スケールアップさせましょう
 
@@ -437,7 +437,6 @@ cf delete-route cfapps.io -n <first-initial><last-initial>-todo
 ここでは単純にバージョン番号の変更として、マニフェストファイルのみの変更としてます.
 
 . マニフェストファイル `manifest.blue-green` を変更します
-
 [source,bash]
 ---
  VERSION: TODO_1_0
