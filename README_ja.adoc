@@ -508,9 +508,8 @@ $cf delete-route $CF_APPS_DOMAIN -n "$DEPLOYED_VERSION" -f
 ----
 
 . あるいは下記の`blue-green.sh`を利用することも可能です.
-link:https://github.com/Pivotal-Field-Engineering/pcf-workspace-devops/blob/master/cities/cities-ui/blue-green.sh
-
-, これによりgreen v2をデプロイしてblue v1を削除することが出来ます. +
+link:https://github.com/Pivotal-Field-Engineering/pcf-workspace-devops/blob/master/cities/cities-ui/blue-green.sh　+
+これによりgreen v2をデプロイしてblue v1を削除することが出来ます. +
 もしこのスクリプトを利用するときには、事前にenvファイルにあるBUILD_NUMBERの数を一つ増やして、
 manifest.blue-greenにあるVERSIONの番号も変更しておいて下さい
 +
