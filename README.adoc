@@ -2,52 +2,62 @@
 
 == Goals
 
-To deploy and configure sample application, leverage the platform for monitoring & management of the microservice, and do a blue green deployment with zero downtime.
+Cloud Foundry上に、アプリケーションのデプロイと構成を行います.
+Cloud Foundryが提供する監視、管理といったプラットフォームとしての機能を確認するとともに、ゼロダウンタイムでのblue-greenデプロイメントを確認します
 
-== Prerequisites
+== Prerequisites(事前準備)
+
+下記ツールとアカウントが必要となりますので、事前にインストールをして下さい。
 
 
 . Git from link:https://mac.github.com/[github.com]
 . Cloud Foundry CLI from link:https://github.com/cloudfoundry/cli/releases[`CF CLI Releases`]
+. Curl from link:http://curl.haxx.se/[curl]
 . Pivotal Web Services Account.
+. nano （もしくはvi, texteditorでも構いませんので適宜読み直して下さい)
 
-== Pre-work
-. Read Presentation The developer experience
-. Download  link:https://github.com/shinji62/todo-apps-php-cf [`Todo Application`]
+== Pre-work(事前作業)
+. Developer Experienceの資料
+. サンプルアプリケーションのダウンロード(PHP) link:https://github.com/shinji62/todo-apps-php-cf[`Todo Application`]
+. サンプルアプリケーションのダウンロード(Java) link:https://github.com/cloudfoundry-samples/cf-sample-app-spring.git[`Todo Application`]
 
 == Steps
-In this workshop we are going to follow these steps to deploy apps on Cloud foundry and manage the lifecycle of the application.
+このワークショップでは、下記の図のステップに従ってアプリケーションをデプロイし、アプリケーションのライフサイクルを管理します。
 
 image:./images/devops-cf.png[DevOps on CF]
 
-
-
-
-== PART 1: Introduction to CF, Push an App.
+== PART 1: Cloud Foundryとアプリケーションのpush
 
 === Login to the Cloud Platform
 
-Use `cf help` and/or `cf <command> --help` for details on each of the commands below.
+Cloud Foundryにログインします。
+`cf help` and/or `cf <command> --help` で詳細な内容をご確認頂けます。
 
-. Review the docs: http://docs.pivotal.io/pivotalcf/devguide/deploy-apps/deploy-app.html
-. Login to the Pivotal Cloud Foundry.
+. ドキュメントの確認 http://docs.pivotal.io/pivotalcf/devguide/deploy-apps/deploy-app.html
+. Pivotal Web Services(PWS), もしくはPivotal Cloud Foundry(PCF)へのログイン
 
++
 [source,bash]
 ----
-// Assuming you are using PWS, your system domain is run.pivotal.io and Use the interactive prompts to login in.
+// PWSを利用している場合: https://api.run.pivotal.io
+// PCF Devを利用している場合: https://api.local.pcfdev.io
+// PCFを利用している場合: ご利用されている環境の管理者の方にお訪ね下さい
+// メールアドレスとパスワード、Org, spaceを選択して下さい
 $ cf login -a https://api.run.pivotal.io
 ----
 +
-
+. もしくは、envというファイルを作成して、sourceコマンドで読み込ませる事も可能です.
++
 [source,bash]
 ----
-$nano env.sh
+$vi env
 
- export CF_SYSTEM_DOMAIN=     //CF_SYSTEM_DOMAIN will look similar to run.pivotal.io
- export CF_APPS_DOMAIN=       //CF_APPS_DOMAIN will look similar to cfapps.io
- export CF_USER=              //CF_USER is the user account to sign into Pivotal Cloud Foundry, which is usually your email address.
- export CF_ORG=               //CF_ORG is the name of the Organization within Pivotal Cloud Foundry where you want to deploy your applications.
- export CF_SPACE=             //CF_SPACE is the name of the Space within the above Organization where you want your application deployed.
+ export CF_SYSTEM_DOMAIN=run.pivotal.io     // PWS
+ export CF_APPS_DOMAIN=cfapps.io       // PWS, PCF Devではlocal.pcfdev.io
+ export CF_USER=              //ログインユーザ名, 通常はメールアドレス
+ export CF_ORG=               //Organization名としてアプリケーションを展開する場所を指定
+ export CF_SPACE=             //Space名、Organization内にあるSpaceを指定
+
 ----
 +
 [source,bash]
@@ -57,87 +67,94 @@ $ cf login -a https://api.$CF_SYSTEM_DOMAIN -u $CF_USER -o $CF_ORG -s $CF_SPACE
 ----
 +
 [NOTE]
-add `--skip-ssl-validation` if you are pointing to CF installation which is using self signed certificates.
+場合によっては、 `--skip-ssl-validation` が必要な場合があります(自己署名付きの証明書を使っている場合など)
 
 +
-. Verify you are logged in with your own userid (*not admin*) and targeted to your PCF instance:
+. ご自身のid(メールアドレス)と適切なターゲットを指定出来るかを確認します。
 +
 [source,bash]
 ----
 $ cf target
 ----
 
-=== Push the app
+=== アプリケーションのpush
 
-. Push the todo-application+
+. todo-application をpushします +
 
 +
 [source,bash]
 ----
-//GO to the directory where the application is
-$ cd path/todo-apps-php-cf/
-//Rename the manifest file
+// アプリケーションがあるディレクトリに進みます。pathはインストールしたディレクトリを指定して下さい
+$ cd path/cf-sample-app-spring/
+
+// マニフェストファイルを編集します。
+// <first-initial><last-initial>は、お名前のイニシャルという意図ですが、場合によっては
+// アカウント名を利用するなど、他の方と被らないものを選んで下さい
 $ mv manifest.yml manifest.service
 $ cf push <first-initial><last-initial>-todo
 
-// This will give an output which is similar to this
+// 下記のような結果が得られるはずです
 
 requested state: started
 instances: 1/1
 usage: 512M x 1 instances
-urls: ge-todo.cfapps.io
+urls: tispring-todo.cfapps.io
 last uploaded: Mon Jun 15 14:53:10 UTC 2015
 stack: cflinuxfs2
 
 ----
 +
-. Open the app url +
-When you push the apps, it will give the url route to the app. 
 
-. Walk through the App Console and the Ops Manager
+. 上記で得られたURLにアクセスします
++
+TIP: アプリケーションをpushした場合、そのアプリケーションにはURLが付与されます
+
+. cf cli(`cf app`), App Managerを確認します
 
 
-=== Recap: Part 1
-
-
-=== Discussion: Part 1
+=== 確認しましょう: Part 1
 
 [NOTE]
 ====
-* How do you push an app to the cloud today?
-* How does the cloud platform understand which runtime to use to run the app?
+* 通常、どのような形でクラウド環境にアプリケーションをデプロイしてますか
+* そのクラウド環境ではどの実行環境をアプリケーションが利用するかを理解できますか
 ====
 
 
-== PART 2: Push, Bind, Monitor and Scale an App.
+== PART 2: アプリケーションのPush, Bindによる割り当て, 監視とスケール
 
-The todo-php-mongo app requires a database service to store and fetch todo info.
+//todo-php-mongoアプリケーションはtodoデータを格納し参照するためのデータベースサービスが必要となります
+ここでは、アプリケーションがデータを格納し参照するためのデータベースサービスを利用します
 
+=== マーケットプレイスからデータベースサービスを作成します
 
-=== Create a Database Service from Marketplace
-
-. Review the docs on Services:
+. サービスに関するドキュメンテーションを確認します:
 +
 * link:http://docs.pivotal.io/pivotalcf/devguide/services/adding-a-service.html[Adding a Service]
 * link:http://docs.pivotal.io/pivotalcf/devguide/services/managing-services.html[Managing Services]
 +
-. Create a mongoLab (mongodb) service instance, name it as `todo-mongo-db-<first-initial><last-initial>`
-You can create the service from the `cli` or launch the App Manager http://console.run.pivotal.io and login.
-Navigate to the marketplace and see the available services. Here you will create the service using the CLI.
+. (PWSの場合) cleardb(MySQL)のサービスインスタンスを作成します。+
+`todo-mysqldb-<first-initial><last-initial>`という形で名前を指定して下さい +
+<first-initial><last-initial>の部分は、アプリケーション名として選んだ方法と同じにして下さい +
+`cli`もしくはApp Manager http://console.run.pivotal.io からサービスを作成することが出来ます. +
+`cf marketplace`もしくはMarketplaceを選択して、利用可能なサービスを選びます.
++
+下記はcliを利用した作成方法です。
+
 +
 [source,bash]
 ----
-$ cf marketplace // check if mongoLab service is available
-$ cf create-service mongolab sandbox todo-mongo-db-<first-initial><last-initial>
+$ cf marketplace // cleardbを探してみます
+$ cf create-service cleardb spark todo-mysqldb-<first-initial><last-initial>
 ----
-+
-
-. Launch the DB console via the `Manage` link in the App Manager. 
 
 
+. App Managerの場合は、作成したサービスから`Manage`をクリックしてDB Consoleを立ち上げます
 
 +
-. Check the logs to learn more about why the application is failling
+//. アプリケーションの起動に失敗します。ログをみてその原因を確認しましょう
+. アプリケーションには何も登録されてません。ログをみてその原因を確認しましょう
+
 +
 [source,bash]
 ----
@@ -145,20 +162,20 @@ $ cf logs <first-initial><last-initial>-todo --recent
 ----
 
 
-=== Manually Binding the Service Instance
+=== サービスインスタンスをマニュアルで割り当て
 
-. Review the docs on link:http://docs.pivotal.io/pivotalcf/devguide/services/bind-service.html[Binding a Service Instance]
+. 参考ドキュメント link:http://docs.pivotal.io/pivotalcf/devguide/services/bind-service.html[Binding a Service Instance]
 
-. Bind the mongodb instance `todo-mongo-db-<first-initial><last-initial>` to your app todo
-You can bind from the App Manager or from the `cli`
+. cleardbのインスタンスをアプリケーションに割り当てます.　
+App Managerからもcliからも操作が可能です.
 +
 [source,bash]
 ----
-$ cf bind-service <first-initial><last-initial>-todo todo-mongo-db-<first-initial><last-initial>
+$ cf bind-service <first-initial><last-initial>-todo todo-mysqldb-<first-initial><last-initial>
 ----
 +
 
-. Restage your todo application to inject the new database.
+. 新しいデータベースを利用するために、アプリケーションを再構成(Restage)します
 
 +
 [source,bash]
@@ -166,136 +183,184 @@ $ cf bind-service <first-initial><last-initial>-todo todo-mongo-db-<first-initia
 $ cf restage first-initial><last-initial>-todo
 ----
 
-Notice that the application is now running.
+. アプリケーションがrunnningという状態になっている事が確認できたら、環境変数を確認して、どのようなサービスが割り当てられているかを確認して下さい.
+App Managerからもcliからも操作が可能です
 
-. Check the Env variables to see if the service is bound.
-You can do it from App Manager or from the `cli`
 +
 [source,bash]
 ----
 $ cf env <first-initial><last-initial>-todo
 ----
 
+=== マニフェストを利用したサービスの割り当て
 
+次に、todoアプリケーションをpushして、マニュフェストの内容をベースに自動デプロイを行います
 
-=== Binding Services via the Manifest
+. 参考ドキュメント link:http://docs.pivotal.io/pivotalcf/devguide/deploy-apps/manifest.html[`Deploying with Application Manifests`]
+. アプリケーション起動時に作成したマニフェストファイル `manifest.service` を編集.
 
-Next, let's push the todo app with a manifest to help automate deployment.
-
-. Review the documentation: http://docs.pivotal.io/pivotalcf/devguide/deploy-apps/manifest.html
-. Edit the application manifest  `manifest.service` in your `todo`
 +
 [source,bash]
 ----
-$ nano manifest.service
+$ vi manifest.service
 ----
 +
-. Set the name of the app, the amount of memory, the number of instances, and the path to the .jar file.
-*Be sure to name your application '<first-initial><last-initial>-todo' and use this as the host value.*
-. Add the services binding `todo-mongo-db-<first-initial><last-initial>` to your deployment manifest for todo .
-. Now, manually unbind the service and re-push your app using the manifest.
+. アプリケーション名、メモリサイズ、インスタンス数、アプリケーションファイルへのパスを指定します +
+*アプリケーション名が '<first-initial><last-initial>-todo' という形になっている事を確認して下さい、これをhost名として利用します* +
+. servicesを追加して、これを`todo-mysqldb-<first-initial><last-initial>` として指定して下さい.
++
+[source]
+----
+applications:
+- name: tispring-todo
+  memory: 512M
+  instances: 1
+  services:
+   - todo-mysqldb-ti
+  random-route: false
+----
+
+. 以上が設定出来たら、一度既存の割り当てを解除します
+
 +
 [source,bash]
 ----
-$ cf unbind-service <first-initial><last-initial>-todo todo-mongo-db-<first-initial><last-initial>
+$ cf unbind-service <first-initial><last-initial>-todo todo-mysqldb-<first-initial><last-initial>
 ----
 +
-. Test your manifest by re-pushing your app with no parameters:
+. マニフェストの内容を確認して、パラメータなしでプッシュします
 +
 [source,bash]
 ----
 $ cf push -f manifest.service
 ----
-Notice that using a manifest, you have moved the command line parameters (number of instances, memory, etc) into the manifest.
-. Verify you can access your application via a curl request:
++
+マニフェストを利用することで、コマンドラインにて必要なパラメータを省略出来ます(インスタンス数、メモリサイズなど).
+
+. curlを利用して、アプリケーションにアクセス出来るか確認します
++
 [source,bash]
 ----
 $ curl -i http://<first-initial><last-initial>-todo.cfapps.io
 ----
-We must be able to access your application at https://<first-initial><last-initial>-todo.cfapps.io for the next steps to work properly.
++
+アプリケーションへのアクセスが確認出来たら、次へ進みます +
+https://<first-initial><last-initial>-todo.cfapps.io
 
 [NOTE]
-The default manifest file for an app is `manifest.yml` and it if is present, it is automatically picked without specifying the manifest file option.
-In this exercise we have used a different naming convention.
+デフォルトのマニフェストファイル名は`manifest.yml`です. +
+もしこれがファイルとして存在している場合には、-f オプションでの
+指定が無い場合は、このファイルを利用してしまいますのでご注意下さい. +
+なお、このワークショップでは、デフォルト名を利用せずに、別のファイル名を利用するものとしております.
 
+=== 状態確認、ログ、イベントの取得
 
-=== Health, logging & events via the CLI
+アプリケーションからの状態通知と、実際にどのように監視やトラブルシューティングに役立てるかを確認します.
+ログの確認にはいくつか方法があります。
 
-Learning about how your application is performing is critical to help you diagnose and troubleshoot potential issues. Cloud Foundry gives you options for viewing the logs.
+アプリケーションの確認には下記のコマンドを利用して最新の状態を確認出来ます:
 
-To tail the logs of your application perform this command:
 [source,bash]
 ----
 $ cf logs <first-initial><last-initial>-todo
 ----
 
-Use the following curl command to see the application working:
+下記のcurlコマンドを利用して、アプリケーションが動作しているかを確認します:
+
 [source,bash]
 ----
 $ curl -i http://<first-initial><last-initial>-todo.cfapps.io/
 ----
 
-For other ways of viewing logs check out the documentation here: link:http://docs.pivotal.io/pivotalcf/devguide/deploy-apps/streaming-logs.html#view[Streaming Logs]
+それ以外のログの利用方法はこちらをご参照下さい: link:http://docs.pivotal.io/pivotalcf/devguide/deploy-apps/streaming-logs.html#view[Streaming Logs]
 
-To view recent events, including application crashes, and error codes, you can see them from the App Manager or from the cli.
+最新のイベントを見るには、App Managerもしくはcliで確認することが可能です
+(アプリケーションのクラッシュ、エラーコードなど)
+
 [source,bash]
 ----
 $ cf events <first-initial><last-initial>-todo
 ----
 
-To view the health of the application you can see from the App Manager or from the cli:
+アプリケーションの状態を確認するには、下記方法も可能です
+
 [source,bash]
 ----
 $ cf app <first-initial><last-initial>-todo
 ----
-You will get detailed output of the health
+
+下記のように、出力結果から、詳細な状態を確認することが可能となります
+
 [source,bash]
 ----
-Showing health and status for app todo in org  / space development as...
+Showing health and status for app tispring-todo in org APJ / space Development as ...
 OK
 
 requested state: started
 instances: 1/1
 usage: 512M x 1 instances
-urls: todo.cfapps.io
-last uploaded: Wed May 27 15:53:32 UTC 2015
+urls: tispring-todo-persistent-plie.cfapps.io
+last uploaded: Sat Feb 11 00:32:14 UTC 2017
 stack: cflinuxfs2
+buildpack: container-certificate-trust-store=2.0.0_RELEASE java-buildpack=v3.13-offline-https://github.com/cloudfoundry/java-buildpack.git#03b493f maria-db-jdbc=1.5.7 open-jdk-like-jre=1.8.0_121 open-jdk-like-memory-calculator=2.0.2_RELEASE spring-boot-cli=1.5.1_...
 
      state     since                    cpu    memory           disk           details
-#0   running   2015-05-27 12:17:55 PM   0.1%   434.5M of 512M   145.4M of 1G
+#0   running   2017-02-11 09:33:07 AM   0.0%   260.2M of 512M   156.2M of 1G
 ----
 
-=== Environment variables
+=== 環境変数について
 
-View the environment variable and explanation of link:http://docs.cloudfoundry.org/devguide/deploy-apps/environment-variable.html#view-env[VCAP Env]
+環境変数の詳細についての詳細はこちらをご覧下さい link:http://docs.cloudfoundry.org/devguide/deploy-apps/environment-variable.html#view-env[VCAP Env]
 
 [source,bash]
 ----
 $ cf env <first-initial><last-initial>-todo
 ----
 
-You will get the output similar to this on your terminal
+下記のような出力が得られる事が確認できます。
+
 [source,bash]
 ----
-Getting env variables for app ge-todo in org jp-POC / space development as getourneau@pivotal.io...
+
+$ cf env tispring-todo
+Getting env variables for app tispring-todo in org APJ / space Development as tichimura@pivotal.io...
 OK
 
 System-Provided:
 {
  "VCAP_SERVICES": {
-  "mongolab": [
+  "cleardb": [
    {
     "credentials": {
-     "uri": "mongodb://CloudFoundry_uXXXXXx:zXXXXXX@taro.com.com:33489/CloudFoundry_XXXXXX"
+     "hostname": "xxxx.cleardb.net",
+     "jdbcUrl": "jdbc:mysql://xxxx.cleardb.net/xxxx?user=xxxx\u0026password=xxxx",
+     "name": "xxxx",
+     "password": "xxxx",
+     "port": "xxxx",
+     "uri": "mysql://xxxx:xxxx@xxxx.cleardb.net:xxxx/xxxx?reconnect=true",
+     "username": "xxxx"
     },
-    "label": "mongolab",
-    "name": "todo-mongo-db-ge",
-    "plan": "sandbox",
+    "label": "cleardb",
+    "name": "todo-mysqldb-ti",
+    "plan": "spark",
+    "provider": null,
+    "syslog_drain_url": null,
     "tags": [
+     "Cloud Databases",
+     "Data Stores",
+     "Web-based",
+     "Online Backup \u0026 Storage",
+     "Single Sign-On",
+     "Cloud Security and Monitoring",
+     "Certified Applications",
+     "Developer Tools",
      "Data Store",
-     "document",
-     "mongodb"
-    ]
+     "Development and Test Tools",
+     "Buyable",
+     "relational",
+     "mysql"
+    ],
+    "volume_mounts": []
    }
   ]
  }
@@ -303,25 +368,26 @@ System-Provided:
 
 {
  "VCAP_APPLICATION": {
-  "application_id": "eXXXXXX",
-  "application_name": "ge-todo",
+  "application_id": "567a488c-5773-4247-b95a-fdbb3a145afc",
+  "application_name": "tispring-todo",
   "application_uris": [
-   "ge-todo.cfapps.io"
+   "tispring-todo-persistent-plie.cfapps.io"
   ],
-  "application_version": "32712532-6c-ccf83d685b03",
+  "application_version": "d8615626-6ad6-4f22-a724-4bd72e04d7cd",
+  "cf_api": "https://api.run.pivotal.io",
   "limits": {
    "disk": 1024,
    "fds": 16384,
    "mem": 512
   },
-  "name": "ge-todo",
-  "space_id": "d1028f61-78be-7bc945",
-  "space_name": "development",
+  "name": "tispring-todo",
+  "space_id": "83cc477c-138a-4376-9bce-a97aacab8222",
+  "space_name": "Development",
   "uris": [
-   "ge-todo.cfapps.io"
+   "tispring-todo-persistent-plie.cfapps.io"
   ],
   "users": null,
-  "version": "32712532-86f2d685b03"
+  "version": "d8615626-6ad6-4f22-a724-4bd72e04d7cd"
  }
 }
 
@@ -330,88 +396,105 @@ No user-defined env variables have been set
 No running env variables have been set
 
 No staging env variables have been set
+
+
+
 ----
 
+=== アプリケーションのスケーリング
 
-=== Scaling apps
+アプリケーションはApp Managerでもcliでもスケールさせることが可能です.
+スケールについてはスケールアップ、スケールアウトさせる事が可能です.
 
-Applications can be scaled via the command line or the console. When we talk about scale, there are two different types of scale: Vertical and Horizontal. Read link:http://docs.cloudfoundry.org/devguide/deploy-apps/cf-scale.html[this] doc on more details on scaling applications.
+参考ドキュメント link:http://docs.cloudfoundry.org/devguide/deploy-apps/cf-scale.html
 
-When you vertically scale your application, you are increasing the amount of memory made available to your application. You would vertically scale your application while profiling your app, do performance tuning and to find the best memory settings before you deploy it in production.
-Scaling your application horizontally means that you are adding application instances to increase your application throughput and performance under load.
+スケールアップさせる場合には、メモリの割り当てを増やす事が可能です. +
+ある程度パフォーマンスチューニングをする事も効果がありますので、すぐに本番適用せずに、最適な設定を試すことをおすすめいたします +
+スケールアウトについては、アプリケーションインスタンスを追加することで、アプリケーションスループットと
+パフォーマンスを向上させることが可能です +
 
-Let's vertically scale the application to 1 GB of RAM.
+まずはメモリのサイズを1GBにまで増やして、スケールアップさせましょう
+
 [source,bash]
 ----
 $ cf scale <first-initial><last-initial>-todo -m 1G
 ----
 
-Now scale your application down to 512 MB.
+続けて、スケールダウンも試しておいて下さい(512MB)
 
-Next, let's scale up your application to 2 instances
+次に、アプリケーションを2つのインスタンスにスケールアウトさせます
+
 [source,bash]
 ----
 $ cf scale <first-initial><last-initial>-todo -i 2
 ----
 
-To check the status of your applications you can check from the command line to see how many instances your app is running and their current state
+コマンドラインからアプリケーションがいくつ稼働しているか、またそれぞれの状態も確認することが出来ます +
+アプリケーションのステータスを確認するには、下記を実行してください
+
 [source,bash]
+
 ----
 $ cf app <first-initial><last-initial>-todo
 ----
 
-Once the second instance as started, scale the app back down to one instance.
+それぞれのインスタンスが起動したら、再度インスタンス数を1に戻します
 
-=== Verify the app from the Console
+=== アプリケーションの状態をコマンドラインから確認
 
-To verify that the application is running, use the following curl commands to retrieve data from the service or use a browser to access the URL:
-
-[source,bash]
-----
-$ curl -i http://<first-initial><last-initial>-todo.cfapps.io
-----
+アプリケーションが起動しているかを確認するには、下記のcurlコマンドを利用してデータを取得するか
+ブラウザを利用してURLにアクセスをします
 
 [source,bash]
 ----
 $ curl -i http://<first-initial><last-initial>-todo.cfapps.io
 ----
 
-[source,bash]
-----
-$ curl -i http://<first-initial><last-initial>-todo.cfapps.io
-----
-
-=== Discussion: Part 2
-In this part of the workshop we created a database service from the marketplace, pushed an app, bound it to the database service, monitored the health of the app and scaled the app.
+=== 確認しましょう: Part 2
+ここではデータベースサービスをマーケットプレイスから作成して、アプリケーションをpush、データベースサービスへの割り当て、
+状態確認、スケールも実施しました
 
 [NOTE]
 ====
-* How does the app get the database info today vs. VCAP_SERVICES?
-* How do you horizontally scale your applications?
+* 現在アプリケーションはどのようにしてデータベースの情報を取得してますか(VCAP_SERVICESのようなものですか)
+* 現状のアプリケーションはどのようにスケールアウトを実現出来てますか
 ====
 
 
-== PART 4: Deploy Version 2 of the App
+== PART 3: アプリケーションの更新
 
-In this section we are going to do a green-blue deployment using a shell script. The same can be done by executing the commands one at a time.
+ここではblue-greenデプロイメントをシェルスクリプトを用いて実現する方法をご紹介します
+同じことはcliでも実現することが可能です
 
-=== Delete the unversioned app and the route
+=== バージョン管理されてないアプリケーションとそのルートを削除します
 [source,bash]
 ----
+// アプリケーションのバージョンを確認します
+$ export DEPLOYED_VERSION=`cf apps | grep $CF_APP- | cut -d" " -f1`
+
+// manifestファイルにて`random-route: true`が指定されていた場合はdelete-routeで指定する対象を `cf routes` で確認してください
 cf delete <first-initial><last-initial>-todo
 cf delete-route cfapps.io -n <first-initial><last-initial>-todo
 ----
 
-=== Push Version 2 and Delete the Old Route using the script
-We are going to deploy the next version of the `cities-ui` app. The deployment typically is automated using a CD pipeline built with Jenkins or any CD automation tool, but in this workshop we will walk through a simple version number change in the deployment manifest.
+=== 新しいバージョンをpushして古いルートをスクリプトを利用して削除します
 
-. Edit the `manifest.blue-green` with the following variables
+ここでは新しいバージョンの`todo`アプリケーションをデプロイします.
+デプロイメントは通常、JenkinsやConcourseなどのCDパイプラインを使い自動化されますが、
+ここでは単純にバージョン番号の変更として、マニフェストファイルのみの変更としてます.
+
+. マニフェストファイル `manifest.blue-green` を作成します
+[source,bash]
+$ cp manifest.service manifest.blue-green
+
+. マニフェストファイル `manifest.blue-green` を変更します
 [source,bash]
 ---
  VERSION: TODO_1_0
 ---
 +
-. Edit and source the `env` file from the cities-ui folder with the following variables
+. 先に作成したenvファイル、あるいはenvファイルを作成して、sourceコマンドを
+実行します
 +
 [source,bash]
 ---
@@ -425,51 +508,73 @@ export CF_MANIFEST=manifest.blue-green
 export BUILD_NUMBER=1001
 ---
 +
-Note: Be sure to change the CF_APP name to match your application and add the BUILD_NUMBER to the env file. Add the Version number in the manifest.blue-green
+Note: アプリケーション名が正しくCF_APPにて指定されているかご確認下さい.
+また、BUILD_NUMBERも指定されているか確認して下さい +
+マニフェストファイルは CF_MANIFESTで指定されているmanifest.blue-greenを利用します.
+このファイルの中でバージョンが指定されている事を確認下さい( VERSION: TODO_1_0 )
 +
-. First deploy the blue v1 of the app.
+. まずblue v1のアプリケーションをデプロイします
 +
 [source,bash]
 ----
-// Push the new version of the app, with the version number and route
-$cf push "$CF_APP-$BUILD_NUMBER" -n "$CF_APP-$BUILD_NUMBER" -d $CF_APPS_DOMAIN -f $CF_MANIFEST
+// 新しいバージョンのアプリケーションをプッシュします、バージョン番号とルートも指定します
+// cf push
+// -n ホスト名
+// -d ドメイン名
+// -f マニフェストファイル
+
+$ cf push "$CF_APP-$BUILD_NUMBER" -n "$CF_APP-$BUILD_NUMBER" -d $CF_APPS_DOMAIN -f $CF_MANIFEST
+
+$ cf map-route "$CF_APP-$BUILD_NUMBER" $CF_APPS_DOMAIN -n $CF_APP
+
 ----
 
-. Next, increment the BUILD_NUMBER in the env file and source it. Change the VERSION number in the manifest.blue-green
+. 次に、BUILD_NUMBERを追加して環境変数に追加、sourceコマンドを実行します.
+. manifest.blue-greenにおいてバージョン番号(VERSION)を更新します.
+
 +
 [source,bash]
 ----
 ....
 export BUILD_NUMBER=2001
 
-$nano manifest.yml
+$ vi manifest.blue-green
 ....
 VERSION: TODO_APP_2_0
 ----
 
-. Deploy the green v2 and delete the blue v1 of the app.
+. 次に、green v2のアプリケーションをデプロイして、blue v1を削除します
 +
 [source,bash]
 ----
-// Push the new version of the app, with the version number and route
-$cf push "$CF_APP-$BUILD_NUMBER" -n "$CF_APP-$BUILD_NUMBER" -d $CF_APPS_DOMAIN  -f $CF_MANIFEST
 
-// Map the route to point to the new app
-$cf map-route "$CF_APP-${BUILD_NUMBER}" $CF_APPS_DOMAIN -n $CF_APP
+// 新しいバージョンのアプリケーションをプッシュします、バージョン番号とルートも指定します
 
-// Get the deployed version of the app
-$export DEPLOYED_VERSION=`cf apps | grep $CF_APP- | cut -d" " -f1`
+$ cf push "$CF_APP-$BUILD_NUMBER" -n "$CF_APP-$BUILD_NUMBER" -d $CF_APPS_DOMAIN  -f $CF_MANIFEST
 
-// Un-map an existing routes and delete the app / routes
+// 新しいアプリケーションを指すようにルートをマッピングします
+// cf map-route
+// -n ホスト名
 
-$cf unmap-route "$DEPLOYED_VERSION" $CF_APPS_DOMAIN -n $CF_APP
-$cf delete "$DEPLOYED_VERSION" -f
-$cf delete-route $CF_APPS_DOMAIN -n "$DEPLOYED_VERSION" -f
+$ cf map-route "$CF_APP-${BUILD_NUMBER}" $CF_APPS_DOMAIN -n $CF_APP
+
+// 既存のルートのマップを解除して、アプリケーションとともに削除します.
+
+$ cf unmap-route "$DEPLOYED_VERSION" $CF_APPS_DOMAIN -n $CF_APP
+$ cf delete "$DEPLOYED_VERSION" -f
+$ cf delete-route $CF_APPS_DOMAIN -n "$DEPLOYED_VERSION" -f
 
 ----
 
-. Alternatively, use the bash script `blue-green.sh` in the cities-ui directory, deploy the green v2 and delete the blue v1 of the app. +
-If you are using the script make sure you increment the BUILD_NUMBER in the env file and change the VERSION number in the manifest.blue-green.
+. あるいは下記の`blue-green.sh`を利用することも可能です.
++
+//link:https://github.com/Pivotal-Field-Engineering/pcf-workspace-devops/blob/master/cities/cities-ui/blue-green.sh[`blue-green.sh`]
+link:https://github.com/Pivotal-Field-Engineering/pcf-workspace-devops/blob/master/cities-service/blue-green.sh[`blue-green.sh`]
++
+これによりgreen v2をデプロイしてblue v1を削除することが出来ます. +
+もしこのスクリプトを利用するときには、事前にenvファイルにあるBUILD_NUMBERの数を一つ増やして、
+manifest.blue-greenにあるVERSIONの番号も変更しておいて下さい +
+下記のように編集してください。
 
 +
 
@@ -508,20 +613,30 @@ fi
 ----
 
 
-=== Repeat the Process
-Change the version (in the manifest) and build numbers (in the env file) and run the script to do blue-green deployment. Check the output using curl.
+=== 上記プロセスの繰り返し
 
+
+バージョンの変更(マニフェストファイル内)とビルド番号の変更(env)を行い、スクリプトを走らせます(blue-green.sh) +
+curlにて結果を確認します.
 
 === Process of Blue Green Deployment
 
-Review the CF Document for blue green deployment link:http://docs.cloudfoundry.org/devguide/deploy-apps/blue-green.html[Using Blue-Green Deployment to Reduce Downtime and Risk]
+参考ドキュメント +
+CFにおけるblue greenデプロイメントについて +
+link:http://docs.cloudfoundry.org/devguide/deploy-apps/blue-green.html[Using Blue-Green Deployment to Reduce Downtime and Risk]
 
-In summary Blue-green deployment is a release technique that reduces downtime and risk by running two identical production environments called Blue and Green.
+Blue-Greenデプロイメントは、リリース手法であり、ダウンタイムを無くして、リスクも減らすために、二つの別々のプロダクション環境として
+blueとgreenという形で構成運用することを表します
+
 image:./images/blue-green-process.png[Blue Green Deployment Process]
 
 
-=== Newsworthy: Automated Blue Green with cf plugin
-Cloud Foundry plugin link:https://github.com/concourse/autopilot[Autopilot] does blue green deployment, albeit it takes a different approach to other zero-downtime plugins. It doesn't perform any complex route re-mappings instead it leans on the manifest feature of the Cloud Foundry CLI. The method also has the advantage of treating a manifest as the source of truth and will converge the state of the system towards that. This makes the plugin ideal for continuous delivery environments.
+=== 参考情報: 自動化されたBlue Greenデプロイメント用のプラグイン
+
+Cloud Foundry plugin link:https://github.com/concourse/autopilot[Autopilot] によりblue greenデプロイメントをするものの、他のものとは異なったデプロイメントのアプローチをします. +
+マップをし直すということはせずに、cliのマニフェスト機能を利用します.
+この手法においては、マニフェストが常に正しいとするのと、常にシステムの状態も集約されるものとしてます.
+これはCDの利用を想定される環境にとっては、望ましいものとなります.
 
 [source,bash]
 ----
@@ -531,30 +646,35 @@ $ export PATH=$PATH:$GOPATH/bin
 
 $ go get github.com/concourse/autopilot
 $ cf install-plugin $GOPATH/bin/autopilot
+// 適切なディレクトリに移動
 $ cd todos
-// Increment the Build
-$ cf zero-downtime-push todos \
+// アプリケーション名を指定してdeploy(mytodosとしている)、ここではbuildpathも指定
+$ cf zero-downtime-push mytodos \
     -f manifest.blue-green \
     -p build/libs//todo-0.0.1-SNAPSHOT.jar
+// Renaming app mytodos to mytodos-venerable in org APJ / space Development as tichimura@pivotal.io...
+// OK
 
 ----
 
-=== Discussion: Part 4
-In this part of the workshop did deployment using a blue green script without any downtime.
-This script / methodology can be used in your CD pipeline to build and deploy Cloud Native Apps with zero downtime.
+=== Discussion: Part 3
+ここでは、blue greenデプロイメントを、ダウンタイム無しで確認しました
+スクリプトや手法についてはCDパイプラインでも利用可能ですので、Cloud Native Applicationのビルド、デプロイ
+にも役立つものとなります.
 
 [NOTE]
 ====
-* Discussion on how do you do Continous Deployment and Delivery with zero downtime today.
+* 皆さんの現状において、ゼロダウンタイムでの継続的なデプロイメントやデリバリを実現できているでしょうか
 ====
 
 
-== Recap
+== 最後に
 
-In this workshop we saw how to build, deploy, bind, scale, monitor apps on Cloud foundry and manage the lifecycle of the application
+このワークショップでは、アプリケーションのライフサイクル管理,　つまり build, deploy, bind, sacle, monitorといった事を
+どのようにCloud Foundry上で実行していくかを確認しました.
+
 
 image:./images/devops-cf.png[DevOps on CF]
 
 
 == Q/A
-
