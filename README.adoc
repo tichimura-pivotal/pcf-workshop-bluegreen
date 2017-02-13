@@ -468,8 +468,6 @@ $ curl -i http://<first-initial><last-initial>-todo.cfapps.io
 === バージョン管理されてないアプリケーションとそのルートを削除します
 [source,bash]
 ----
-// アプリケーションのバージョンを確認します
-$ export DEPLOYED_VERSION=`cf apps | grep $CF_APP- | cut -d" " -f1`
 
 // manifestファイルにて`random-route: true`が指定されていた場合はdelete-routeで指定する対象を `cf routes` で確認してください
 cf delete <first-initial><last-initial>-todo
@@ -526,6 +524,9 @@ $ cf push "$CF_APP-$BUILD_NUMBER" -n "$CF_APP-$BUILD_NUMBER" -d $CF_APPS_DOMAIN 
 
 $ cf map-route "$CF_APP-$BUILD_NUMBER" $CF_APPS_DOMAIN -n $CF_APP
 
+// アプリケーションのバージョンを確認します
+$ export DEPLOYED_VERSION=`cf apps | grep $CF_APP- | cut -d" " -f1`
+$ echo $DEPLOYED_VERSION
 ----
 
 . 次に、BUILD_NUMBERを追加して環境変数に追加、sourceコマンドを実行します.
