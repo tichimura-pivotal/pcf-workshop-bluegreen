@@ -133,9 +133,9 @@ TIP: アプリケーションをpushした場合、そのアプリケーショ�
 * link:http://docs.pivotal.io/pivotalcf/devguide/services/adding-a-service.html[Adding a Service]
 * link:http://docs.pivotal.io/pivotalcf/devguide/services/managing-services.html[Managing Services]
 +
-. (PWSの場合) cleardb(MySQL)のサービスインスタンスを作成します。+
-`todo-mysqldb-<first-initial><last-initial>`という形で名前を指定して下さい +
-<first-initial><last-initial>の部分は、アプリケーション名として選んだ方法と同じにして下さい +
+. (PWSの場合) cleardb(MySQL)のサービスインスタンスを作成します. +
+`todo-mysqldb-<first-initial><last-initial>`という形で名前を指定して下さい. +
+`<first-initial><last-initial>`の部分は、アプリケーション名として選んだ方法と同じにして下さい. +
 `cli`もしくはApp Manager http://console.run.pivotal.io からサービスを作成することが出来ます. +
 `cf marketplace`もしくはMarketplaceを選択して、利用可能なサービスを選びます.
 +
@@ -180,7 +180,7 @@ $ cf bind-service <first-initial><last-initial>-todo todo-mysqldb-<first-initial
 +
 [source,bash]
 ----
-$ cf restage first-initial><last-initial>-todo
+$ cf restage <first-initial><last-initial>-todo
 ----
 
 . アプリケーションがrunnningという状態になっている事が確認できたら、環境変数を確認して、どのようなサービスが割り当てられているかを確認して下さい.
@@ -406,7 +406,7 @@ No staging env variables have been set
 アプリケーションはApp Managerでもcliでもスケールさせることが可能です.
 スケールについてはスケールアップ、スケールアウトさせる事が可能です.
 
-参考ドキュメント link:http://docs.cloudfoundry.org/devguide/deploy-apps/cf-scale.html
+参考ドキュメント link:http://docs.cloudfoundry.org/devguide/deploy-apps/cf-scale.html[]
 
 スケールアップさせる場合には、メモリの割り当てを増やす事が可能です. +
 ある程度パフォーマンスチューニングをする事も効果がありますので、すぐに本番適用せずに、最適な設定を試すことをおすすめいたします +
@@ -463,8 +463,7 @@ $ curl -i http://<first-initial><last-initial>-todo.cfapps.io
 
 == PART 3: アプリケーションの更新
 
-ここではblue-greenデプロイメントをシェルスクリプトを用いて実現する方法をご紹介します
-同じことはcliでも実現することが可能です
+ここではblue-greenデプロイメントをcli、及び、シェルスクリプトを用いて実現する方法をご紹介します
 
 === バージョン管理されてないアプリケーションとそのルートを削除します
 [source,bash]
@@ -535,12 +534,11 @@ $ cf map-route "$CF_APP-$BUILD_NUMBER" $CF_APPS_DOMAIN -n $CF_APP
 +
 [source,bash]
 ----
-....
-export BUILD_NUMBER=2001
+$ export BUILD_NUMBER=2001
 
 $ vi manifest.blue-green
 ....
-VERSION: TODO_APP_2_0
+ VERSION: TODO_APP_2_0
 ----
 
 . 次に、green v2のアプリケーションをデプロイして、blue v1を削除します
