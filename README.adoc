@@ -487,7 +487,8 @@ $ cp manifest.service manifest.blue-green
 . マニフェストファイル `manifest.blue-green` を変更します
 [source,bash]
 ---
- VERSION: TODO_1_0
+  env:
+    VERSION: TODO_1_0
 ---
 +
 . 先に作成したenvファイル、あるいはenvファイルを作成して、sourceコマンドを
@@ -539,7 +540,8 @@ $ export BUILD_NUMBER=2001
 
 $ vi manifest.blue-green
 ....
- VERSION: TODO_APP_2_0
+  env:
+    VERSION: TODO_APP_2_0
 ----
 
 . 次に、green v2のアプリケーションをデプロイして、blue v1を削除します
